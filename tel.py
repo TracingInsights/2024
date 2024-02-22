@@ -252,7 +252,7 @@ for event in events_list:
         
 
         for driver in drivers:
-            f1session = fastf1.get_session(2024, 1, 1)
+            f1session = fastf1.get_testing_session(2024, 1, 1)
             f1session.load(telemetry=False, weather=False, messages=False)
             laps = f1session.laps
             driver_laps = laps.pick_driver(driver)
