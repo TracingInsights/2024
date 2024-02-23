@@ -25,6 +25,7 @@ jobs:
         run: |
           git config --local user.name github-actions
           git config --local user.email "action@github.com"
+          git pull origin main
           git add .
           if [[ "$(git status --porcelain)" != "" ]]; then
               git commit -m "Update data" -a
