@@ -241,18 +241,18 @@ for event in events_list:
     # Get sessions for the current event
     # sessions = sessions_available(YEAR, event)
     sessions =  [
-      "Practice 1",
+      "Practice 3",
     
     ]
     
 
     # Loop through each session and create a folder within the event folder
     for session in sessions:
-        drivers = session_drivers_list(2024, 1, 2)
+        drivers = session_drivers_list(2024, 1, 3)
         
 
         for driver in drivers:
-            f1session = fastf1.get_testing_session(2024, 1, 2)
+            f1session = fastf1.get_testing_session(2024, 1, 3)
             f1session.load(telemetry=False, weather=False, messages=False)
             laps = f1session.laps
             driver_laps = laps.pick_driver(driver)
@@ -267,7 +267,7 @@ for event in events_list:
 
                 try:
 
-                    telemetry = telemetry_data(2024, 1, 2, driver, lap_number)
+                    telemetry = telemetry_data(2024, 1, 3, driver, lap_number)
 
 
                     # print(telemetry)
