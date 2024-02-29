@@ -35,9 +35,9 @@ events = [
     # 'São Paulo Grand Prix',
     # 'Las Vegas Grand Prix', 'Abu Dhabi Grand Prix',     'Japanese Grand Prix',
 ]
- sessions = [
-        "Practice 1",
-    ]
+sessions = [
+    "Practice 1",
+]
 
 
 def sessions_available(year: int, event: str | int) -> any:
@@ -410,10 +410,10 @@ def session_drivers(year: int, event: str | int, session: str) -> any:
     return {"drivers": drivers}
 
 
-import os
 import json
-import utils
+import os
 
+import utils
 
 # Loop through each event
 for event in events_list:
@@ -477,7 +477,6 @@ def laps_data(year: int, event: str | int, session: str, driver: str) -> any:
     return drivers_data
 
 
-
 # Loop through each event
 for event in events_list:
 
@@ -486,7 +485,6 @@ for event in events_list:
     #     sessions = ['Practice 1', 'Qualifying', 'Sprint Shootout', 'Sprint', 'Race']
     # else:
     #     sessions = sessions_available(YEAR, event)
-
 
     # Loop through each session and create a folder within the event folder
     for session in sessions:
@@ -508,5 +506,3 @@ for event in events_list:
                 json.dump(laptimes, json_file)
 
             # print(f"Dictionary saved to {file_path}")
-
-
