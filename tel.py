@@ -19,7 +19,7 @@ def events_available(year: int) -> any:
 
 events = [
     
-    'Pre-Season Testing', 
+    'Bahrain Grand Prix', 
 
 # 'Bahrain Grand Prix', 'Saudi Arabian Grand Prix', 
 #     'Australian Grand Prix',
@@ -47,14 +47,125 @@ def sessions_available(year: int, event: str | int) -> any:
     data = utils.LatestData(year)
     sessions = data.get_sessions(event)
     return sessions
+    
+def get_sessions(year, event):
+    p1_p2_p3 = ["Practice 1", "Practice 2", "Practice 3"]
+    p1_p2_q_r = ["Practice 1", "Practice 2", "Qualifying", "Race"]
+    p2_p3_q_r = ["Practice 2", "Practice 3", "Qualifying", "Race"]
+    p3_q_r = ["Practice 3", "Qualifying", "Race"]
+    p1_q_r = ["Practice 1", "Qualifying", "Race"]
+    normal_sessions = [
+        "Practice 1",
+        "Practice 2",
+        "Practice 3",
+        "Qualifying",
+        "Race",
+    ]
 
+    normal_sprint = [
+        "Practice 1",
+        "Qualifying",
+        "Practice 2",
+        "Sprint Qualifying",
+        "Race",
+    ]
+    sprint_2022 = [
+        "Practice 1",
+        "Qualifying",
+        "Practice 2",
+        "Sprint",
+        "Race",
+    ]
+
+    sprint_shootout = [
+        "Practice 1",
+        "Qualifying",
+        "Sprint Shootout",
+        "Sprint",
+        "Race",
+    ]
+    sprint_shootout_2024 = [
+        "Practice 1",
+        "Sprint Shootout",
+        "Sprint",
+        "Qualifying",
+        "Race",
+    ]
+
+    if year == 2018:
+        return normal_sessions
+    if year == 2019:
+        if event == "Japanese Grand Prix":
+            return p1_p2_q_r
+        return normal_sessions
+    if year == 2020:
+        if event == "Styrian Grand Prix":
+            return p1_p2_q_r
+        if event == "Eifel Grand Prix":
+            return p3_q_r
+        if event == "Emilia Romagna Grand Prix":
+            return p1_q_r
+
+        return normal_sessions
+    if year == 2021:
+        if (
+            event == "British Grand Prix"
+            or event == "Italian Grand Prix"
+            or event == "São Paulo Grand Prix"
+        ):
+            return normal_sprint
+        else:
+            return normal_sessions
+
+    if year == 2022:
+        if event == "Pre-Season Test":
+            return p1_p2_p3
+        if (
+            event == "Austrian Grand Prix"
+            or event == "Emilia Romagna Grand Prix"
+            or event == "São Paulo Grand Prix"
+        ):
+            return sprint_2022
+        else:
+            return normal_sessions
+
+    if year == 2023:
+        if event == "Pre-Season Testing":
+            return p1_p2_p3
+        if event == "Hungarian Grand Prix":
+            return p2_p3_q_r
+        if (
+            event == "Austrian Grand Prix"
+            or event == "Azerbaijan Grand Prix"
+            or event == "Belgium Grand Prix"
+            or event == "Qatar Grand Prix"
+            or event == "United States Grand Prix"
+            or event == "São Paulo Grand Prix"
+        ):
+            return sprint_shootout
+        else:
+            return normal_sessions
+    if year == 2024:
+        if event == "Pre-Season Testing":
+            return p1_p2_p3
+        if (
+            event == "Chinese Grand Prix"
+            or event == "Miami Grand Prix"
+            or event == "Austrian Grand Prix"
+            or event == "United States Grand Prix"
+            or event == "São Paulo Grand Prix"
+            or event == "Qatar Grand Prix"
+        ):
+            return sprint_shootout_2024
+
+        return normal_sessions
 
 
 def session_drivers(year: int, event: str | int, session: str) -> any:
     # get drivers available for a given year, event and session
     import fastf1
 
-    f1session = fastf1.get_testing_session(year, event, session)
+    f1session = fastf1.get_session(year, event, session)
     f1session.load(telemetry=True, weather=False, messages=False)
 
     laps = f1session.laps
@@ -79,7 +190,7 @@ def session_drivers_list(year: int, event: str | int, session: str) -> any:
     # get drivers available for a given year, event and session
     import fastf1
 
-    f1session = fastf1.get_testing_session(year, event, session)
+    f1session = fastf1.get_session(year, event, session)
     f1session.load(telemetry=True, weather=False, messages=False)
 
     laps = f1session.laps
@@ -91,7 +202,7 @@ def session_drivers_list(year: int, event: str | int, session: str) -> any:
 
 def laps_data(year: int, event: str | int, session: str, driver: str) -> any:
     # get drivers available for a given year, event, and session
-    f1session = fastf1.get_testing_session(year, event, session)
+    f1session = fastf1.get_session(year, event, session)
     f1session.load(telemetry=False, weather=False, messages=False)
     laps = f1session.laps
 
@@ -187,7 +298,7 @@ def accCalc(allLapsDriverTelemetry, Nax, Nay, Naz):
 
 
 def telemetry_data(year, event, session: str, driver, lap_number):
-    f1session = fastf1.get_testing_session(year, event, session)
+    f1session = fastf1.get_session(year, event, session)
     f1session.load(telemetry=True, weather=False, messages=False)
     laps = f1session.laps
 
@@ -241,18 +352,18 @@ for event in events_list:
     # Get sessions for the current event
     # sessions = sessions_available(YEAR, event)
     sessions =  [
-      "Practice 3",
+      "Practice 1",
     
     ]
     
 
     # Loop through each session and create a folder within the event folder
     for session in sessions:
-        drivers = session_drivers_list(2024, 1, 3)
+        drivers = session_drivers_list(YEAR, event, session)
         
 
         for driver in drivers:
-            f1session = fastf1.get_testing_session(2024, 1, 3)
+            f1session = fastf1.get_session(YEAR, event, session)
             f1session.load(telemetry=False, weather=False, messages=False)
             laps = f1session.laps
             driver_laps = laps.pick_driver(driver)
@@ -267,7 +378,7 @@ for event in events_list:
 
                 try:
 
-                    telemetry = telemetry_data(2024, 1, 3, driver, lap_number)
+                    telemetry = telemetry_data(YEAR, event, session, driver, lap_number)
 
 
                     # print(telemetry)
