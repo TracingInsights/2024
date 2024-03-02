@@ -36,7 +36,7 @@ events = [
     # 'Las Vegas Grand Prix', 'Abu Dhabi Grand Prix',     'Japanese Grand Prix',
 ]
 sessions = [
-    "Qualifying",
+    "Race",
 ]
 
 
