@@ -558,4 +558,6 @@ while True:
                     json.dump(corner_info, json_file)
 
     except:
+        import time
+        time.sleep(5)
         continue
