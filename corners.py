@@ -48,8 +48,8 @@ for event in events:
             "Distance": circuit_info['Distance'].tolist(),
         }
 
-        driver_folder = f"{YEAR}/{EVENT}/{SESSION}"
-        file_path = f"{YEAR}/{EVENT}/{SESSION}/corners.json"
+        driver_folder = f"{EVENT}/{SESSION}"
+        file_path = f"{EVENT}/{SESSION}/corners.json"
         if not os.path.exists(driver_folder):
             os.makedirs(driver_folder)
         # Save the dictionary to a JSON file
