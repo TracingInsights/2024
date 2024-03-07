@@ -37,7 +37,7 @@ events = [
     # 'Las Vegas Grand Prix', 'Abu Dhabi Grand Prix',     'Japanese Grand Prix',
 ]
 sessions = [
-    "Practice 1",
+    "Practice 2",
 ]
 
 
