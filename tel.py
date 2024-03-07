@@ -344,213 +344,218 @@ def telemetry_data(year, event, session: str, driver, lap_number):
     }
     return telemetry_data
 
-
-# Your list of events
-events_list = events
-
-# Loop through each event
-for event in events_list:
-    # Get sessions for the current event
-    # sessions = sessions_available(YEAR, event)
-
-    # Loop through each session and create a folder within the event folder
-    for session in sessions:
-        drivers = session_drivers_list(YEAR, event, session)
-
-        for driver in drivers:
-            f1session = fastf1.get_session(YEAR, event, session)
+while True:
+    try:
+            
+        # Your list of events
+        events_list = events
+        
+        # Loop through each event
+        for event in events_list:
+            # Get sessions for the current event
+            # sessions = sessions_available(YEAR, event)
+        
+            # Loop through each session and create a folder within the event folder
+            for session in sessions:
+                drivers = session_drivers_list(YEAR, event, session)
+        
+                for driver in drivers:
+                    f1session = fastf1.get_session(YEAR, event, session)
+                    f1session.load(telemetry=False, weather=False, messages=False)
+                    laps = f1session.laps
+                    driver_laps = laps.pick_driver(driver)
+                    driver_laps["LapNumber"] = driver_laps["LapNumber"].astype(int)
+                    driver_lap_numbers = round(driver_laps["LapNumber"]).tolist()
+        
+                    for lap_number in driver_lap_numbers:
+                        driver_folder = f"{event}/{session}/{driver}"
+                        if not os.path.exists(driver_folder):
+                            os.makedirs(driver_folder)
+        
+                        try:
+        
+                            telemetry = telemetry_data(YEAR, event, session, driver, lap_number)
+        
+                            # print(telemetry)
+        
+                            # Specify the file path where you want to save the JSON data
+                            file_path = f"{driver_folder}/{lap_number}_tel.json"
+        
+                            # Save the dictionary to a JSON file
+                            with open(file_path, "w") as json_file:
+                                json.dump(telemetry, json_file)
+                        except:
+                            continue
+        
+        
+        def session_drivers(year: int, event: str | int, session: str) -> any:
+            # get drivers available for a given year, event and session
+            import fastf1
+        
+            f1session = fastf1.get_session(year, event, session)
+            f1session.load(telemetry=True, weather=False, messages=False)
+        
+            laps = f1session.laps
+            team_colors = utils.team_colors(year)
+            # add team_colors dict to laps on Team column
+            laps["color"] = laps["Team"].map(team_colors)
+        
+            unique_drivers = laps["Driver"].unique()
+        
+            drivers = [
+                {
+                    "driver": driver,
+                    "team": laps[laps.Driver == driver].Team.iloc[0],
+                }
+                for driver in unique_drivers
+            ]
+        
+            return {"drivers": drivers}
+        
+        
+        import json
+        import os
+        
+        import utils
+        
+        # Loop through each event
+        for event in events_list:
+        
+            # sessions = sessions_available(YEAR, event)
+        
+            # sessions = ['Practice 1','Practice 2','Practice 3']
+        
+            # Loop through each session and create a folder within the event folder
+            for session in sessions:
+                drivers = session_drivers(YEAR, event, session)
+        
+                import json
+        
+                # Specify the file path where you want to save the JSON data
+                file_path = f"{event}/{session}/drivers.json"
+        
+                # Save the dictionary to a JSON file
+                with open(file_path, "w") as json_file:
+                    json.dump(drivers, json_file)
+        
+                print(f"Dictionary saved to {file_path}")
+        
+        
+        def session_drivers_list(year: int, event: str | int, session: str) -> any:
+            # get drivers available for a given year, event and session
+            import fastf1
+        
+            f1session = fastf1.get_session(year, event, session)
+            f1session.load(telemetry=True, weather=False, messages=False)
+        
+            laps = f1session.laps
+        
+            unique_drivers = laps["Driver"].unique()
+        
+            return list(unique_drivers)
+        
+        
+        def laps_data(year: int, event: str | int, session: str, driver: str) -> any:
+            # get drivers available for a given year, event, and session
+            f1session = fastf1.get_session(year, event, session)
             f1session.load(telemetry=False, weather=False, messages=False)
             laps = f1session.laps
+        
+            # add team_colors dict to laps on Team column
+        
+            # for each driver in drivers, get the Team column from laps and get the color from team_colors dict
+            drivers_data = []
+        
             driver_laps = laps.pick_driver(driver)
-            driver_laps["LapNumber"] = driver_laps["LapNumber"].astype(int)
-            driver_lap_numbers = round(driver_laps["LapNumber"]).tolist()
-
-            for lap_number in driver_lap_numbers:
-                driver_folder = f"{event}/{session}/{driver}"
-                if not os.path.exists(driver_folder):
-                    os.makedirs(driver_folder)
-
-                try:
-
-                    telemetry = telemetry_data(YEAR, event, session, driver, lap_number)
-
-                    # print(telemetry)
-
+            driver_laps["LapTime"] = driver_laps["LapTime"].dt.total_seconds()
+            # remove rows where LapTime is null
+            driver_laps = driver_laps[driver_laps.LapTime.notnull()]
+        
+            drivers_data = {
+                "time": driver_laps["LapTime"].tolist(),
+                "lap": driver_laps["LapNumber"].tolist(),
+                "compound": driver_laps["Compound"].tolist(),
+            }
+        
+            return drivers_data
+        
+        
+        # Loop through each event
+        for event in events_list:
+        
+            # # Get sessions for the current event
+            # if event == "Qatar Grand Prix":
+            #     sessions = ['Practice 1', 'Qualifying', 'Sprint Shootout', 'Sprint', 'Race']
+            # else:
+            #     sessions = sessions_available(YEAR, event)
+        
+            # Loop through each session and create a folder within the event folder
+            for session in sessions:
+                drivers = session_drivers_list(YEAR, event, session)
+        
+                for driver in drivers:
+                    # Create a folder for the driver if it doesn't exist
+                    driver_folder = f"{event}/{session}/{driver}"
+                    if not os.path.exists(driver_folder):
+                        os.makedirs(driver_folder)
+        
+                    laptimes = laps_data(YEAR, event, session, driver)
+        
                     # Specify the file path where you want to save the JSON data
-                    file_path = f"{driver_folder}/{lap_number}_tel.json"
-
+                    file_path = f"{driver_folder}/laptimes.json"
+        
                     # Save the dictionary to a JSON file
                     with open(file_path, "w") as json_file:
-                        json.dump(telemetry, json_file)
-                except:
-                    continue
-
-
-def session_drivers(year: int, event: str | int, session: str) -> any:
-    # get drivers available for a given year, event and session
-    import fastf1
-
-    f1session = fastf1.get_session(year, event, session)
-    f1session.load(telemetry=True, weather=False, messages=False)
-
-    laps = f1session.laps
-    team_colors = utils.team_colors(year)
-    # add team_colors dict to laps on Team column
-    laps["color"] = laps["Team"].map(team_colors)
-
-    unique_drivers = laps["Driver"].unique()
-
-    drivers = [
-        {
-            "driver": driver,
-            "team": laps[laps.Driver == driver].Team.iloc[0],
-        }
-        for driver in unique_drivers
-    ]
-
-    return {"drivers": drivers}
-
-
-import json
-import os
-
-import utils
-
-# Loop through each event
-for event in events_list:
-
-    # sessions = sessions_available(YEAR, event)
-
-    # sessions = ['Practice 1','Practice 2','Practice 3']
-
-    # Loop through each session and create a folder within the event folder
-    for session in sessions:
-        drivers = session_drivers(YEAR, event, session)
-
+                        json.dump(laptimes, json_file)
+        
+                    # print(f"Dictionary saved to {file_path}")
+        
+        
+        
+        
+        
+        
+        
+        
+        # corners
+        
+        import fastf1
+        import os
         import json
+        import utils
+        
+        
+        
+        
+        
+        def sessions_available(year: int, event: str | int) -> any:
+            # get sessions available for a given year and event
+            event = str(event)
+            data = utils.LatestData(year)
+            sessions = data.get_sessions(event)
+            return sessions
+        
+        for event in events:
+            
+            for session in sessions:
+                f1session = fastf1.get_session(YEAR, event, session)
+                f1session.load()
+                circuit_info = f1session.get_circuit_info().corners
+                corner_info ={
+                    "CornerNumber": circuit_info['Number'].tolist(),
+                    "X": circuit_info['X'].tolist(),
+                    "Y": circuit_info['Y'].tolist(),
+                    "Angle": circuit_info['Angle'].tolist(),
+                    "Distance": circuit_info['Distance'].tolist(),
+                }
+        
+                driver_folder = f"{event}/{session}"
+                file_path = f"{event}/{session}/corners.json"
+                if not os.path.exists(driver_folder):
+                    os.makedirs(driver_folder)
+                # Save the dictionary to a JSON file
+                with open(file_path, "w") as json_file:
+                    json.dump(corner_info, json_file)
 
-        # Specify the file path where you want to save the JSON data
-        file_path = f"{event}/{session}/drivers.json"
-
-        # Save the dictionary to a JSON file
-        with open(file_path, "w") as json_file:
-            json.dump(drivers, json_file)
-
-        print(f"Dictionary saved to {file_path}")
-
-
-def session_drivers_list(year: int, event: str | int, session: str) -> any:
-    # get drivers available for a given year, event and session
-    import fastf1
-
-    f1session = fastf1.get_session(year, event, session)
-    f1session.load(telemetry=True, weather=False, messages=False)
-
-    laps = f1session.laps
-
-    unique_drivers = laps["Driver"].unique()
-
-    return list(unique_drivers)
-
-
-def laps_data(year: int, event: str | int, session: str, driver: str) -> any:
-    # get drivers available for a given year, event, and session
-    f1session = fastf1.get_session(year, event, session)
-    f1session.load(telemetry=False, weather=False, messages=False)
-    laps = f1session.laps
-
-    # add team_colors dict to laps on Team column
-
-    # for each driver in drivers, get the Team column from laps and get the color from team_colors dict
-    drivers_data = []
-
-    driver_laps = laps.pick_driver(driver)
-    driver_laps["LapTime"] = driver_laps["LapTime"].dt.total_seconds()
-    # remove rows where LapTime is null
-    driver_laps = driver_laps[driver_laps.LapTime.notnull()]
-
-    drivers_data = {
-        "time": driver_laps["LapTime"].tolist(),
-        "lap": driver_laps["LapNumber"].tolist(),
-        "compound": driver_laps["Compound"].tolist(),
-    }
-
-    return drivers_data
-
-
-# Loop through each event
-for event in events_list:
-
-    # # Get sessions for the current event
-    # if event == "Qatar Grand Prix":
-    #     sessions = ['Practice 1', 'Qualifying', 'Sprint Shootout', 'Sprint', 'Race']
-    # else:
-    #     sessions = sessions_available(YEAR, event)
-
-    # Loop through each session and create a folder within the event folder
-    for session in sessions:
-        drivers = session_drivers_list(YEAR, event, session)
-
-        for driver in drivers:
-            # Create a folder for the driver if it doesn't exist
-            driver_folder = f"{event}/{session}/{driver}"
-            if not os.path.exists(driver_folder):
-                os.makedirs(driver_folder)
-
-            laptimes = laps_data(YEAR, event, session, driver)
-
-            # Specify the file path where you want to save the JSON data
-            file_path = f"{driver_folder}/laptimes.json"
-
-            # Save the dictionary to a JSON file
-            with open(file_path, "w") as json_file:
-                json.dump(laptimes, json_file)
-
-            # print(f"Dictionary saved to {file_path}")
-
-
-
-
-
-
-
-
-# corners
-
-import fastf1
-import os
-import json
-import utils
-
-
-
-
-
-def sessions_available(year: int, event: str | int) -> any:
-    # get sessions available for a given year and event
-    event = str(event)
-    data = utils.LatestData(year)
-    sessions = data.get_sessions(event)
-    return sessions
-
-for event in events:
-    
-    for session in sessions:
-        f1session = fastf1.get_session(YEAR, event, session)
-        f1session.load()
-        circuit_info = f1session.get_circuit_info().corners
-        corner_info ={
-            "CornerNumber": circuit_info['Number'].tolist(),
-            "X": circuit_info['X'].tolist(),
-            "Y": circuit_info['Y'].tolist(),
-            "Angle": circuit_info['Angle'].tolist(),
-            "Distance": circuit_info['Distance'].tolist(),
-        }
-
-        driver_folder = f"{event}/{session}"
-        file_path = f"{event}/{session}/corners.json"
-        if not os.path.exists(driver_folder):
-            os.makedirs(driver_folder)
-        # Save the dictionary to a JSON file
-        with open(file_path, "w") as json_file:
-            json.dump(corner_info, json_file)
+    except:
+        continue
