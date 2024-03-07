@@ -4,12 +4,11 @@ import json
 
 
 YEAR = 2024
-EVENT = "BAHRAIN GRAND PRIX"
-SESSION = "RACE"
+
 
 events = [
-    # "Pre-Season Testing"
-    "Bahrain Grand Prix",
+    "Pre-Season Testing"
+    # "Bahrain Grand Prix",
     # 'Bahrain Grand Prix', 'Saudi Arabian Grand Prix',
     #     'Australian Grand Prix',
     # 'Azerbaijan Grand Prix',
@@ -30,8 +29,8 @@ sessions = [
     "Practice 1",
       "Practice 2",
       "Practice 3",
-      "Qualifying",
-      "Race",
+      # "Qualifying",
+      # "Race",
 ]
 
 
