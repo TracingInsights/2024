@@ -556,7 +556,7 @@ while True:
                 # Save the dictionary to a JSON file
                 with open(file_path, "w") as json_file:
                     json.dump(corner_info, json_file)
-
+        break
     except:
         import time
         time.sleep(5)
