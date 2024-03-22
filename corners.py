@@ -7,10 +7,10 @@ YEAR = 2024
 
 
 events = [
-    "Pre-Season Testing"
+    # "Pre-Season Testing"
     # "Bahrain Grand Prix",
     # 'Bahrain Grand Prix', 'Saudi Arabian Grand Prix',
-    #     'Australian Grand Prix',
+        'Australian Grand Prix',
     # 'Azerbaijan Grand Prix',
     # 'Miami Grand Prix',
     # 'Monaco Grand Prix',
@@ -27,8 +27,8 @@ events = [
 ]
 sessions = [
     "Practice 1",
-      "Practice 2",
-      "Practice 3",
+      # "Practice 2",
+      # "Practice 3",
       # "Qualifying",
       # "Race",
 ]
