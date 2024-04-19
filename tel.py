@@ -36,14 +36,14 @@ events = [
     # 'Mexico City Grand Prix',
     # 'São Paulo Grand Prix',
     # 'Las Vegas Grand Prix', 'Abu Dhabi Grand Prix',     
-    'Japanese Grand Prix',
+    'Chinese Grand Prix',
 ]
 sessions = [
-    # "Practice 1",
+    "Practice 1",
       # "Practice 2",
       # "Practice 3",
       # "Qualifying",
-       "Race",
+       # "Race",
 ]
 
 
