@@ -25,8 +25,8 @@ events = [
         # 'Australian Grand Prix',
     # 'Azerbaijan Grand Prix',
     # 'Miami Grand Prix',
-    "Emilia Romagna Grand Prix",
-    # 'Monaco Grand Prix',
+    # "Emilia Romagna Grand Prix",
+    'Monaco Grand Prix',
     # 'Spanish Grand Prix', 'Canadian Grand Prix',
     # 'Austrian Grand Prix',
     # 'British Grand Prix', 'Hungarian Grand Prix',
@@ -40,11 +40,11 @@ events = [
     # 'Chinese Grand Prix',
 ]
 sessions = [
-    # "Practice 1",
+    "Practice 1",
       # "Practice 2",
       # "Practice 3",
       # "Qualifying",
-       "Race",
+       # "Race",
     # "Sprint",
      # "Sprint Qualifying",
 ]
