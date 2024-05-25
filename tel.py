@@ -42,8 +42,8 @@ events = [
 sessions = [
     # "Practice 1",
       # "Practice 2",
-      "Practice 3",
-      # "Qualifying",
+      # "Practice 3",
+      "Qualifying",
        # "Race",
     # "Sprint",
      # "Sprint Qualifying",
