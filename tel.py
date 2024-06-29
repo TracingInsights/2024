@@ -46,8 +46,8 @@ sessions = [
      # "Practice 3",
       # "Qualifying",
        # "Race",
-    # "Sprint",
-     "Sprint Qualifying",
+    "Sprint",
+     # "Sprint Qualifying",
 ]
 
 
