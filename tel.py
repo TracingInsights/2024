@@ -30,8 +30,8 @@ events = [
     # 'Spanish Grand Prix',
     # 'Canadian Grand Prix',
     # 'Austrian Grand Prix',
-    'British Grand Prix', 
-    # 'Hungarian Grand Prix',
+    # 'British Grand Prix', 
+    'Hungarian Grand Prix',
     # 'Belgian Grand Prix',
     # 'Dutch Grand Prix', 'Italian Grand Prix',
     # 'Singapore Grand Prix',
@@ -42,10 +42,10 @@ events = [
     # 'Chinese Grand Prix',
 ]
 sessions = [
-    # "Practice 1",
+    "Practice 1",
       # "Practice 2",
      # "Practice 3",
-      "Qualifying",
+      # "Qualifying",
        # "Race",
     #"Sprint",
      # "Sprint Qualifying",
