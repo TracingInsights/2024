@@ -3,7 +3,7 @@ name: genTel
 on: 
   workflow_dispatch:
   schedule:
-    - cron: '0 10 * * *'
+    - cron: '30 10 * * *'
 
 env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
