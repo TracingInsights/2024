@@ -45,32 +45,6 @@ class LatestData:
 def team_colors(year: int) -> dict:
     team_colors = {}
 
-    if year == 2024:
-        team_colors = {
-            "Red Bull Racing": "#ffe119",
-            "Ferrari": "#e6194b",
-            "Aston Martin": "#3cb44b",
-            "Mercedes": "#00c0bf",
-            "Alpine": "#f032e6",
-            "Haas F1 Team": "#ffffff",
-            "McLaren": "#f58231",
-            "Kick Sauber": "#800000",
-            "RB": "#dcbeff",
-            "Williams": "#4363d8",
-            "Red Bull Racing Honda RBPT": "#ffe119",
-            "Ferrari": "#e6194b",
-            "Aston Martin Aramco Mercedes": "#3cb44b",
-            "Mercedes": "#00c0bf",
-            "Alpine Renault": "#f032e6",
-            "Haas Ferrari": "#ffffff",
-            "McLaren Mercedes": "#f58231",
-            "Alfa Romeo Ferrari": "#800000",
-            "AlphaTauri Honda RBPT": "#dcbeff",
-            "Williams Mercedes": "#4363d8",
-            "Red Bull": "#ffe119",
-            "Alpine F1 Team": "#f032e6",
-        }
-
     if year == 2023:
         team_colors = {
             "Red Bull Racing": "#ffe119",

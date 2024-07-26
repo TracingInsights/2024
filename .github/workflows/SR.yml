@@ -1,4 +1,4 @@
-name: genTel
+name: SR
 
 on: 
   workflow_dispatch:
