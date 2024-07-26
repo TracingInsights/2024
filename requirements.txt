@@ -1,2 +1,2 @@
 pandas==2.0.3
-fastf1
+fastf1==3.3.9
