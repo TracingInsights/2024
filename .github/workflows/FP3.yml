@@ -3,7 +3,7 @@ name: FP3
 on: 
   workflow_dispatch:
   schedule:
-    - cron: '30 9 24 8 *'
+    - cron: '30 10 31 8 *'
 
 env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
