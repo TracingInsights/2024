@@ -3,7 +3,7 @@ name: SQ
 on: 
   workflow_dispatch:
   schedule:
-    - cron: '40 10 20 7 *'
+    - cron: '30 21 18 10 *'
 
 env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
