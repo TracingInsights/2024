@@ -37,8 +37,8 @@ events = [
     # 'Italian Grand Prix',
     # 'Singapore Grand Prix',
     # 'United States Grand Prix',
-    'Mexico City Grand Prix',
-    # 'São Paulo Grand Prix',
+    # 'Mexico City Grand Prix',
+    'São Paulo Grand Prix',
     # 'Las Vegas Grand Prix', 'Abu Dhabi Grand Prix',     
     # 'Chinese Grand Prix',
 ]

@@ -3,7 +3,7 @@ name: SR
 on: 
   workflow_dispatch:
   schedule:
-    - cron: '00 18 19 10 *'
+    - cron: '00 14 2 11 *'
 
 env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
