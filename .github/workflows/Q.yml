@@ -3,7 +3,7 @@ name: Q
 on: 
   workflow_dispatch:
   schedule:
-    - cron: '30 10 3 11 *'
+    - cron: '0 6 23 11 *'
 
 env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
