@@ -3,7 +3,7 @@ name: R
 on: 
   workflow_dispatch:
   schedule:
-    - cron: '0 17 1 12 *'
+    - cron: '0 15 8 12 *'
 
 env:
   ACTIONS_ALLOW_UNSECURE_COMMANDS: true
