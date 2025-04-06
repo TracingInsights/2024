@@ -1,1 +1,1 @@
-{"time": [102.169, 102.31, 105.726, 103.247, 102.391, 95.297, 86.502], "lap": [1.0, 2.0, 4.0, 6.0, 7.0, 8.0, 9.0], "compound": ["INTERMEDIATE", "INTERMEDIATE", "INTERMEDIATE", "SOFT", "SOFT", "SOFT", "SOFT"]}
+{"time": [102.169, 102.31, "None", 105.726, "None", 103.247, 102.391, 95.297, 86.502], "lap": [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0], "compound": ["INTERMEDIATE", "INTERMEDIATE", "INTERMEDIATE", "INTERMEDIATE", "INTERMEDIATE", "SOFT", "SOFT", "SOFT", "SOFT"]}
