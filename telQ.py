@@ -48,8 +48,17 @@ class TelemetryExtractor:
         self.year = year
         self.events = events or [
     
-    'Hungarian Grand Prix',
-    'Dutch Grand Prix',
+    
+    
+    
+    
+    
+    
+    'Azerbaijan Grand Prix',
+    'Singapore Grand Prix',
+    
+    'Mexico City Grand Prix',
+    
     
 ]
         self.sessions = sessions or ["Practice 1" , "Practice 2", "Practice 3", "Qualifying" ,"Race"]
