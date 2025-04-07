@@ -47,33 +47,18 @@ class TelemetryExtractor:
         """Initialize the TelemetryExtractor."""
         self.year = year
         self.events = events or [
-    # "Pre-Season Testing",
-    "Australian Grand Prix",
-    # 'Chinese Grand Prix',
-    'Japanese Grand Prix',
-    'Bahrain Grand Prix',
-    'Saudi Arabian Grand Prix',
-    # 'Miami Grand Prix',
-    "Emilia Romagna Grand Prix",
-    'Monaco Grand Prix',
-    'Spanish Grand Prix',
-    'Canadian Grand Prix',
-    # 'Austrian Grand Prix',
-    'British Grand Prix',
-    'Belgian Grand Prix',
-    'Hungarian Grand Prix',
-    'Dutch Grand Prix',
-    'Italian Grand Prix',
-    'Azerbaijan Grand Prix',
-    'Singapore Grand Prix',
-    # 'United States Grand Prix',
-    'Mexico City Grand Prix',
-    # 'São Paulo Grand Prix',
-    'Las Vegas Grand Prix',
-    # 'Qatar Grand Prix',
-    'Abu Dhabi Grand Prix',
+# 'Chinese Grand Prix',
+# 'Miami Grand Prix',
+# 'Austrian Grand Prix',
+# 'United States Grand Prix',
+'São Paulo Grand Prix',
+'Qatar Grand Prix',
+
+
+
+    
 ]
-        self.sessions = sessions or ["Practice 1" , "Practice 2", "Practice 3", "Qualifying" ,"Race"]
+        self.sessions = sessions or ["Practice 1" , "Sprint Qualifying", "Qualifying" ,"Race", "Sprint"]
 
     def get_session(
         self, event: Union[str, int], session: str, load_telemetry: bool = False
