@@ -53,7 +53,7 @@ class TelemetryExtractor:
             
             "Austrian Grand Prix",
             
-            "United States Grand Prix",
+            # "United States Grand Prix",
            
             # "São Paulo Grand Prix",
             
