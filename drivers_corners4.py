@@ -66,15 +66,15 @@ class TelemetryExtractor:
             
             # "Las Vegas Grand Prix",
            
-            "Abu Dhabi Grand Prix",
+            "Miami Grand Prix",
              # "Saudi Arabian Grand Prix",
         ]
         self.sessions = sessions or [
             "Practice 1",
-            "Practice 2",
-            "Practice 3",
-            "Qualifying",
-            "Race",
+        "Sprint Qualifying",
+        "Sprint",
+        "Qualifying",
+        "Race",
         ]
 
     def get_session(
