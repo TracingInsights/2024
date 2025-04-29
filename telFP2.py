@@ -51,13 +51,13 @@ class TelemetryExtractor:
             "Chinese Grand Prix",
             "Miami Grand Prix",
             
-            "Austrian Grand Prix",
+            # "Austrian Grand Prix",
             
-            "United States Grand Prix",
+            # "United States Grand Prix",
            
-            "São Paulo Grand Prix",
+            # "São Paulo Grand Prix",
             
-            "Qatar Grand Prix",
+            # "Qatar Grand Prix",
             
 ]
         self.sessions = sessions or  [
