@@ -213,7 +213,7 @@ class TelemetryExtractor:
 
         try:
             # Load session data once
-            f1session = self.get_session(event, session)
+            f1session = self.get_session(event, session, load_telemetry=True)
 
             # Save drivers information
             drivers_info = self.session_drivers(event, session)
