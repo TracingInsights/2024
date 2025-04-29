@@ -59,8 +59,8 @@ class TelemetryExtractor:
             # "Belgian Grand Prix",
             # "Dutch Grand Prix",
             # "Italian Grand Prix",
-            "Azerbaijan Grand Prix",
-            # "Singapore Grand Prix",
+            # "Azerbaijan Grand Prix",
+            "Singapore Grand Prix",
             
             # "Mexico City Grand Prix",
             

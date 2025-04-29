@@ -58,11 +58,11 @@ class TelemetryExtractor:
             # "Hungarian Grand Prix",
             # "Belgian Grand Prix",
             # "Dutch Grand Prix",
-            "Italian Grand Prix",
+            # "Italian Grand Prix",
             # "Azerbaijan Grand Prix",
             # "Singapore Grand Prix",
             
-            # "Mexico City Grand Prix",
+            "Mexico City Grand Prix",
             
             # "Las Vegas Grand Prix",
            

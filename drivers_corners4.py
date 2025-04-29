@@ -52,7 +52,7 @@ class TelemetryExtractor:
             # "Emilia Romagna Grand Prix",
             # "Monaco Grand Prix",
             # "Canadian Grand Prix",
-            "Spanish Grand Prix",
+            # "Spanish Grand Prix",
             
             # "British Grand Prix",
             # "Hungarian Grand Prix",
@@ -66,7 +66,7 @@ class TelemetryExtractor:
             
             # "Las Vegas Grand Prix",
            
-            # "Abu Dhabi Grand Prix",
+            "Abu Dhabi Grand Prix",
              # "Saudi Arabian Grand Prix",
         ]
         self.sessions = sessions or [

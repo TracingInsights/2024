@@ -44,10 +44,11 @@ class TelemetryExtractor:
         """Initialize the TelemetryExtractor."""
         self.year = year
         self.events = events or [
+            "Qatar Grand Prix",
            # "Bahrain Grand Prix",
            
             # "Australian Grand Prix",
-            "Japanese Grand Prix",
+            # "Japanese Grand Prix",
             
             # "Emilia Romagna Grand Prix",
             # "Monaco Grand Prix",
@@ -71,10 +72,10 @@ class TelemetryExtractor:
         ]
         self.sessions = sessions or [
             "Practice 1",
-            "Practice 2",
-            "Practice 3",
-            "Qualifying",
-            "Race",
+        "Sprint Shootout",
+        "Sprint",
+        "Qualifying",
+        "Race",
         ]
 
     def get_session(

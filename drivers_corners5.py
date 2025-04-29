@@ -54,7 +54,7 @@ class TelemetryExtractor:
             # "Canadian Grand Prix",
             # "Spanish Grand Prix",
             
-            "British Grand Prix",
+            # "British Grand Prix",
             # "Hungarian Grand Prix",
             # "Belgian Grand Prix",
             # "Dutch Grand Prix",
@@ -64,7 +64,7 @@ class TelemetryExtractor:
             
             # "Mexico City Grand Prix",
             
-            # "Las Vegas Grand Prix",
+            "Las Vegas Grand Prix",
            
             # "Abu Dhabi Grand Prix",
              # "Saudi Arabian Grand Prix",
