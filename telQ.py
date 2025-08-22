@@ -47,18 +47,38 @@ class TelemetryExtractor:
         """Initialize the TelemetryExtractor."""
         self.year = year
         self.events = events or [
-    
-    
-    
-    "São Paulo Grand Prix",
-    
-    
-]
-        self.sessions = sessions or ["Practice 1",
-        "Sprint Qualifying",
-        "Sprint",
-        "Qualifying",
-        "Race",]
+            # "Bahrain Grand Prix",
+            # "Saudi Arabian Grand Prix",
+            # "Australian Grand Prix",
+            "Japanese Grand Prix",
+            # "Chinese Grand Prix",
+            # "Miami Grand Prix",
+            # "Emilia Romagna Grand Prix",
+            # "Monaco Grand Prix",
+            # "Canadian Grand Prix",
+            # "Spanish Grand Prix",
+            # "Austrian Grand Prix",
+            # "British Grand Prix",
+            # "Hungarian Grand Prix",
+            # "Belgian Grand Prix",
+            # "Dutch Grand Prix",
+            # "Italian Grand Prix",
+            # "Azerbaijan Grand Prix",
+            # "Singapore Grand Prix",
+            # "United States Grand Prix",
+            # "Mexico City Grand Prix",
+            # "São Paulo Grand Prix",
+            # "Las Vegas Grand Prix",
+            # "Qatar Grand Prix",
+            # "Abu Dhabi Grand Prix",
+        ]
+        self.sessions = sessions or [
+            "Practice 1",
+            "Practice 2",
+            "Practice 3",
+            "Qualifying",
+            "Race",
+        ]
 
     def get_session(
         self, event: Union[str, int], session: str, load_telemetry: bool = False
@@ -105,7 +125,6 @@ class TelemetryExtractor:
             logger.error(f"Error getting drivers for {event} {session}: {str(e)}")
             return {"drivers": []}
 
-
     def laps_data(
         self, event: Union[str, int], session: str, driver: str, f1session=None
     ) -> Dict[str, List]:
@@ -117,34 +136,107 @@ class TelemetryExtractor:
             laps = f1session.laps
             driver_laps = laps.pick_drivers(driver).copy()  # Create a copy here
 
+            # Helper function to convert timedelta to seconds
+
+            def timedelta_to_seconds(time_value):
+                if pd.isna(time_value) or not hasattr(time_value, "total_seconds"):
+                    return "None"
+                return round(time_value.total_seconds(), 3)
+
             # Convert lap times to seconds and handle NaN values
-            lap_times = []
-            for lap_time in driver_laps["LapTime"]:
-                if hasattr(lap_time, "total_seconds"):
-                    lap_times.append(lap_time.total_seconds())
-                elif pd.isna(lap_time):  # Check if it's NaN
-                    lap_times.append(None)  # Use None instead of NaN
-                else:
-                    lap_times.append(None)
+            lap_times = [
+                timedelta_to_seconds(lap_time) for lap_time in driver_laps["LapTime"]
+            ]
+
+            # Convert sector times to seconds
+            sector1_times = [
+                timedelta_to_seconds(s1_time) for s1_time in driver_laps["Sector1Time"]
+            ]
+            sector2_times = [
+                timedelta_to_seconds(s2_time) for s2_time in driver_laps["Sector2Time"]
+            ]
+            sector3_times = [
+                timedelta_to_seconds(s3_time) for s3_time in driver_laps["Sector3Time"]
+            ]
 
             # Handle NaN values in compounds
             compounds = []
             for compound in driver_laps["Compound"]:
                 if pd.isna(compound):
-                    compounds.append(None)  # Use None instead of NaN
+                    compounds.append("None")  # Use None instead of NaN
                 else:
                     compounds.append(compound)
+
+            # Handle stint information
+            stints = []
+            for stint in driver_laps["Stint"]:
+                if pd.isna(stint):
+                    stints.append("None")  # Use None instead of NaN
+                else:
+                    stints.append(int(stint))  # Convert to int for consistency
+
+            # Handle TyreLife
+            tyre_life = []
+            for life in driver_laps["TyreLife"]:
+                if pd.isna(life):
+                    tyre_life.append("None")
+                else:
+                    tyre_life.append(int(life))
+
+            # Handle Position
+            positions = []
+            for pos in driver_laps["Position"]:
+                if pd.isna(pos):
+                    positions.append("None")
+                else:
+                    positions.append(int(pos))
+
+            # Handle TrackStatus
+            track_status = []
+            for status in driver_laps["TrackStatus"]:
+                if pd.isna(status):
+                    track_status.append("None")
+                else:
+                    track_status.append(str(status))
+
+            # Handle IsPersonalBest
+            is_personal_best = []
+            for is_pb in driver_laps["IsPersonalBest"]:
+                if pd.isna(is_pb):
+                    is_personal_best.append("None")
+                else:
+                    is_personal_best.append(bool(is_pb))
 
             return {
                 "time": lap_times,
                 "lap": driver_laps["LapNumber"].tolist(),
                 "compound": compounds,
+                "stint": stints,
+                "s1": sector1_times,
+                "s2": sector2_times,
+                "s3": sector3_times,
+                "life": tyre_life,
+                "pos": positions,
+                "status": track_status,
+                "pb": is_personal_best,
             }
         except Exception as e:
             logger.error(
                 f"Error getting lap data for {driver} in {event} {session}: {str(e)}"
             )
-            return {"time": [], "lap": [], "compound": []}
+            return {
+                "time": [],
+                "lap": [],
+                "compound": [],
+                "stint": [],
+                "s1": [],
+                "s2": [],
+                "s3": [],
+                "life": [],
+                "pos": [],
+                "status": [],
+                "pb": [],
+            }
 
     def accCalc(
         self, telemetry: pd.DataFrame, Nax: int, Nay: int, Naz: int
@@ -398,7 +490,9 @@ class TelemetryExtractor:
             # Replace NaN values with None before JSON serialization
             laptimes["time"] = ["None" if pd.isna(x) else x for x in laptimes["time"]]
             laptimes["lap"] = ["None" if pd.isna(x) else x for x in laptimes["lap"]]
-            laptimes["compound"] = ["None" if pd.isna(x) else x for x in laptimes["compound"]]
+            laptimes["compound"] = [
+                "None" if pd.isna(x) else x for x in laptimes["compound"]
+            ]
             with open(f"{driver_dir}/laptimes.json", "w") as json_file:
                 json.dump(laptimes, json_file)
 

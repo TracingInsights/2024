@@ -47,17 +47,38 @@ class TelemetryExtractor:
         """Initialize the TelemetryExtractor."""
         self.year = year
         self.events = events or [
-            
-         "Qatar Grand Prix",
-            
-]
-        self.sessions = sessions or  [
-        "Practice 1",
-        "Sprint Qualifying",
-        "Sprint",
-        "Qualifying",
-        "Race",
-    ]
+            # "Bahrain Grand Prix",
+            # "Saudi Arabian Grand Prix",
+            # "Australian Grand Prix",
+            # "Japanese Grand Prix",
+            # "Chinese Grand Prix",
+            # "Miami Grand Prix",
+            "Emilia Romagna Grand Prix",
+            # "Monaco Grand Prix",
+            # "Canadian Grand Prix",
+            # "Spanish Grand Prix",
+            # "Austrian Grand Prix",
+            # "British Grand Prix",
+            # "Hungarian Grand Prix",
+            # "Belgian Grand Prix",
+            # "Dutch Grand Prix",
+            # "Italian Grand Prix",
+            # "Azerbaijan Grand Prix",
+            # "Singapore Grand Prix",
+            # "United States Grand Prix",
+            # "Mexico City Grand Prix",
+            # "São Paulo Grand Prix",
+            # "Las Vegas Grand Prix",
+            # "Qatar Grand Prix",
+            # "Abu Dhabi Grand Prix",
+        ]
+        self.sessions = sessions or [
+            "Practice 1",
+            "Practice 2",
+            "Practice 3",
+            "Qualifying",
+            "Race",
+        ]
 
     def get_session(
         self, event: Union[str, int], session: str, load_telemetry: bool = False
@@ -66,7 +87,7 @@ class TelemetryExtractor:
         cache_key = f"{self.year}-{event}-{session}"
         if cache_key not in SESSION_CACHE:
             f1session = fastf1.get_session(self.year, event, session)
-            f1session.load(telemetry=load_telemetry, weather=True, messages=True)
+            f1session.load(telemetry=load_telemetry, weather=False, messages=False)
             SESSION_CACHE[cache_key] = f1session
         return SESSION_CACHE[cache_key]
 
@@ -104,7 +125,6 @@ class TelemetryExtractor:
             logger.error(f"Error getting drivers for {event} {session}: {str(e)}")
             return {"drivers": []}
 
-
     def laps_data(
         self, event: Union[str, int], session: str, driver: str, f1session=None
     ) -> Dict[str, List]:
@@ -116,34 +136,107 @@ class TelemetryExtractor:
             laps = f1session.laps
             driver_laps = laps.pick_drivers(driver).copy()  # Create a copy here
 
+            # Helper function to convert timedelta to seconds
+
+            def timedelta_to_seconds(time_value):
+                if pd.isna(time_value) or not hasattr(time_value, "total_seconds"):
+                    return "None"
+                return round(time_value.total_seconds(), 3)
+
             # Convert lap times to seconds and handle NaN values
-            lap_times = []
-            for lap_time in driver_laps["LapTime"]:
-                if hasattr(lap_time, "total_seconds"):
-                    lap_times.append(lap_time.total_seconds())
-                elif pd.isna(lap_time):  # Check if it's NaN
-                    lap_times.append(None)  # Use None instead of NaN
-                else:
-                    lap_times.append(None)
+            lap_times = [
+                timedelta_to_seconds(lap_time) for lap_time in driver_laps["LapTime"]
+            ]
+
+            # Convert sector times to seconds
+            sector1_times = [
+                timedelta_to_seconds(s1_time) for s1_time in driver_laps["Sector1Time"]
+            ]
+            sector2_times = [
+                timedelta_to_seconds(s2_time) for s2_time in driver_laps["Sector2Time"]
+            ]
+            sector3_times = [
+                timedelta_to_seconds(s3_time) for s3_time in driver_laps["Sector3Time"]
+            ]
 
             # Handle NaN values in compounds
             compounds = []
             for compound in driver_laps["Compound"]:
                 if pd.isna(compound):
-                    compounds.append(None)  # Use None instead of NaN
+                    compounds.append("None")  # Use None instead of NaN
                 else:
                     compounds.append(compound)
+
+            # Handle stint information
+            stints = []
+            for stint in driver_laps["Stint"]:
+                if pd.isna(stint):
+                    stints.append("None")  # Use None instead of NaN
+                else:
+                    stints.append(int(stint))  # Convert to int for consistency
+
+            # Handle TyreLife
+            tyre_life = []
+            for life in driver_laps["TyreLife"]:
+                if pd.isna(life):
+                    tyre_life.append("None")
+                else:
+                    tyre_life.append(int(life))
+
+            # Handle Position
+            positions = []
+            for pos in driver_laps["Position"]:
+                if pd.isna(pos):
+                    positions.append("None")
+                else:
+                    positions.append(int(pos))
+
+            # Handle TrackStatus
+            track_status = []
+            for status in driver_laps["TrackStatus"]:
+                if pd.isna(status):
+                    track_status.append("None")
+                else:
+                    track_status.append(str(status))
+
+            # Handle IsPersonalBest
+            is_personal_best = []
+            for is_pb in driver_laps["IsPersonalBest"]:
+                if pd.isna(is_pb):
+                    is_personal_best.append("None")
+                else:
+                    is_personal_best.append(bool(is_pb))
 
             return {
                 "time": lap_times,
                 "lap": driver_laps["LapNumber"].tolist(),
                 "compound": compounds,
+                "stint": stints,
+                "s1": sector1_times,
+                "s2": sector2_times,
+                "s3": sector3_times,
+                "life": tyre_life,
+                "pos": positions,
+                "status": track_status,
+                "pb": is_personal_best,
             }
         except Exception as e:
             logger.error(
                 f"Error getting lap data for {driver} in {event} {session}: {str(e)}"
             )
-            return {"time": [], "lap": [], "compound": []}
+            return {
+                "time": [],
+                "lap": [],
+                "compound": [],
+                "stint": [],
+                "s1": [],
+                "s2": [],
+                "s3": [],
+                "life": [],
+                "pos": [],
+                "status": [],
+                "pb": [],
+            }
 
     def accCalc(
         self, telemetry: pd.DataFrame, Nax: int, Nay: int, Naz: int
@@ -321,24 +414,19 @@ class TelemetryExtractor:
 
             # Try to get corner data from fastf1 first
             try:
-                circuit_info = f1session.get_circuit_info()
-                corners = circuit_info.corners
-                # Get the rotation from the circuit info
-                rotation = circuit_info.rotation
-
+                circuit_info = f1session.get_circuit_info().corners
                 corner_info = {
-                    "CornerNumber": corners["Number"].tolist(),
-                    "X": corners["X"].tolist(),
-                    "Y": corners["Y"].tolist(),
-                    "Angle": corners["Angle"].tolist(),
-                    "Distance": corners["Distance"].tolist(),
-                    "Rotation": rotation  # Add rotation information
+                    "CornerNumber": circuit_info["Number"].tolist(),
+                    "X": circuit_info["X"].tolist(),
+                    "Y": circuit_info["Y"].tolist(),
+                    "Angle": circuit_info["Angle"].tolist(),
+                    "Distance": circuit_info["Distance"].tolist(),
                 }
                 CIRCUIT_INFO_CACHE[cache_key] = corner_info
                 return corner_info
             except (AttributeError, KeyError):
                 # Fall back to API method if fastf1 method fails
-                circuit_info, rotation = self._get_circuit_info_from_api(circuit_key)
+                circuit_info = self._get_circuit_info_from_api(circuit_key)
                 if circuit_info is not None:
                     corner_info = {
                         "CornerNumber": circuit_info["Number"].tolist(),
@@ -346,7 +434,6 @@ class TelemetryExtractor:
                         "Y": circuit_info["Y"].tolist(),
                         "Angle": circuit_info["Angle"].tolist(),
                         "Distance": (circuit_info["Distance"] / 10).tolist(),
-                        "Rotation": rotation  # Add rotation information from API
                     }
                     CIRCUIT_INFO_CACHE[cache_key] = corner_info
                     return corner_info
@@ -357,19 +444,16 @@ class TelemetryExtractor:
             logger.error(f"Error getting circuit info for {event} {session}: {str(e)}")
             return None
 
-    def _get_circuit_info_from_api(self, circuit_key: int) -> Tuple[Optional[pd.DataFrame], float]:
+    def _get_circuit_info_from_api(self, circuit_key: int) -> Optional[pd.DataFrame]:
         """Get circuit information from the MultiViewer API."""
         url = f"{PROTO}://{HOST}/api/v1/circuits/{circuit_key}/{self.year}"
         try:
             response = requests.get(url, headers=HEADERS)
             if response.status_code != 200:
                 logger.debug(f"[{response.status_code}] {response.content.decode()}")
-                return None, 0.0
+                return None
 
             data = response.json()
-            # Extract rotation from the API response
-            rotation = float(data.get("rotation", 0.0))
-
             rows = []
             for entry in data["corners"]:
                 rows.append(
@@ -385,10 +469,10 @@ class TelemetryExtractor:
 
             return pd.DataFrame(
                 rows, columns=["X", "Y", "Number", "Letter", "Angle", "Distance"]
-            ), rotation
+            )
         except Exception as e:
             logger.error(f"Error fetching circuit data from API: {str(e)}")
-            return None, 0.0
+            return None
 
     def process_driver(
         self, event: str, session: str, driver: str, base_dir: str, f1session=None
@@ -406,7 +490,9 @@ class TelemetryExtractor:
             # Replace NaN values with None before JSON serialization
             laptimes["time"] = ["None" if pd.isna(x) else x for x in laptimes["time"]]
             laptimes["lap"] = ["None" if pd.isna(x) else x for x in laptimes["lap"]]
-            laptimes["compound"] = ["None" if pd.isna(x) else x for x in laptimes["compound"]]
+            laptimes["compound"] = [
+                "None" if pd.isna(x) else x for x in laptimes["compound"]
+            ]
             with open(f"{driver_dir}/laptimes.json", "w") as json_file:
                 json.dump(laptimes, json_file)
 
