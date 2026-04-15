@@ -1,44 +1,39 @@
 """
-Season Session Laptimes Merger
-==============================
-Combines per-driver ``laptimes.json`` files that already exist for a session
-into a single session-level ``session_laptimes.json`` file.
+Session Laptimes Merger
+=======================
+Combines per-driver laptimes.json files into a single session_laptimes.json
+at the session level.
 
-Output directory:
-{event_name}/{session_name}/session_laptimes.json
+Input:
+    {event_name}/{session_name}/{driver}/laptimes.json  (one per driver)
 
-Configuration style intentionally mirrors ``LapTimes.py``:
-- Set ``DEFAULT_YEAR``
-- Uncomment one or more values in ``TARGET_EVENT_NAMES_LIST``
-- Select one or more values in ``TARGET_SESSIONS``
+Output:
+    {event_name}/{session_name}/session_laptimes.json
 
-Behavior:
-- Overwrites existing ``session_laptimes.json``
-- Skips missing driver ``laptimes.json`` files and logs them
-- Merges into one column-oriented structure by concatenating each key's arrays
-- Pads missing keys/short arrays with ``"None"`` to preserve row alignment
+All driver arrays are concatenated in alphabetical driver order.
+The existing `drv` field in each file identifies which rows belong to which driver.
+If session_laptimes.json already exists it is overwritten.
 """
 
-from __future__ import annotations
-
-import json
 import logging
-from pathlib import Path
-from typing import Dict, List, Tuple
+import os
+import sys
+from typing import Any, Dict, List, Optional
 
+import orjson
 
 # ---------------------------------------------------------------------------
-# Constants & Configuration
+# Configuration — mirror the style of LapTimes.py
 # ---------------------------------------------------------------------------
 
 DEFAULT_YEAR = 2024
-# Keep one or more uncommented events in this list.
+
 TARGET_EVENT_NAMES_LIST = [
-    # "Australian Grand Prix",
-    # "Chinese Grand Prix",
-    # "Japanese Grand Prix",
     # "Bahrain Grand Prix",
     # "Saudi Arabian Grand Prix",
+    # "Australian Grand Prix",
+    # "Japanese Grand Prix",
+    # "Chinese Grand Prix",
     # "Miami Grand Prix",
     # "Emilia Romagna Grand Prix",
     # "Monaco Grand Prix",
@@ -59,7 +54,7 @@ TARGET_EVENT_NAMES_LIST = [
     # "Qatar Grand Prix",
     "Abu Dhabi Grand Prix",
 ]
-TARGET_EVENT_NAMES = [event.strip() for event in TARGET_EVENT_NAMES_LIST if event.strip()]
+TARGET_EVENT_NAMES = [e.strip() for e in TARGET_EVENT_NAMES_LIST if e.strip()]
 if not TARGET_EVENT_NAMES:
     raise ValueError("Set at least one active event in TARGET_EVENT_NAMES_LIST.")
 
@@ -72,7 +67,7 @@ AVAILABLE_SESSIONS = [
     "Sprint",
     "Race",
 ]
-# Select one or more sessions from AVAILABLE_SESSIONS.
+
 TARGET_SESSIONS = [
     # "Practice 1",
     # "Practice 2",
@@ -82,12 +77,14 @@ TARGET_SESSIONS = [
     # "Sprint",
     "Race",
 ]
+
 invalid_target_sessions = sorted(set(TARGET_SESSIONS) - set(AVAILABLE_SESSIONS))
 if invalid_target_sessions:
     raise ValueError(
         "Invalid TARGET_SESSIONS value(s): " + ", ".join(invalid_target_sessions)
     )
 
+ORJSON_OPTS = orjson.OPT_SERIALIZE_NUMPY | orjson.OPT_NON_STR_KEYS
 
 # ---------------------------------------------------------------------------
 # Logging
@@ -97,221 +94,199 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
-        logging.FileHandler("session_laptimes_merge.log"),
+        logging.FileHandler("merge_laptimes.log"),
         logging.StreamHandler(),
     ],
 )
-logger = logging.getLogger("session_laptimes_merger")
+logger = logging.getLogger("merge_laptimes")
 
 
 # ---------------------------------------------------------------------------
-# JSON helpers
+# Helpers
 # ---------------------------------------------------------------------------
 
 
-def _load_json(path: Path) -> Dict[str, List[object]]:
-    with path.open("r", encoding="utf-8") as file_obj:
-        data = json.load(file_obj)
-    if not isinstance(data, dict):
-        raise ValueError(f"{path} does not contain a JSON object.")
-    return data
+def _read_json(path: str) -> Dict[str, Any]:
+    with open(path, "rb") as f:
+        return orjson.loads(f.read())
 
 
-def _write_json(path: Path, obj: Dict[str, List[object]]) -> None:
-    with path.open("w", encoding="utf-8") as file_obj:
-        json.dump(obj, file_obj, ensure_ascii=False)
+def _write_json(path: str, obj: Any) -> None:
+    with open(path, "wb") as f:
+        f.write(orjson.dumps(obj, option=ORJSON_OPTS))
 
 
-def _resolve_season_root(year: int, root_dir: Path | None) -> Path:
+def _driver_lap_count(data: Dict[str, List]) -> int:
+    """Return the length of the first non-empty array in a driver's data dict."""
+    for v in data.values():
+        if isinstance(v, list) and len(v) > 0:
+            return len(v)
+    return 0
+
+
+def _discover_drivers(session_dir: str) -> List[str]:
     """
-    Resolve the directory that contains season event folders.
-
-    This supports both common layouts:
-    - {cwd}/{event_name}/{session_name}
-    - {cwd}/{year}/{event_name}/{session_name}
+    Return alphabetically sorted list of driver abbreviations that have a
+    laptimes.json inside session_dir.
     """
-    base_dir = (root_dir or Path.cwd()).resolve()
-    if base_dir.name == str(year):
-        return base_dir
+    drivers = []
+    try:
+        entries = os.listdir(session_dir)
+    except FileNotFoundError:
+        return drivers
 
-    nested_year_dir = base_dir / str(year)
-    if nested_year_dir.is_dir():
-        logger.info("Using nested season directory: %s", nested_year_dir)
-        return nested_year_dir
+    for entry in sorted(entries):
+        driver_dir = os.path.join(session_dir, entry)
+        laptimes_path = os.path.join(driver_dir, "laptimes.json")
+        if os.path.isdir(driver_dir) and os.path.isfile(laptimes_path):
+            drivers.append(entry)
 
-    return base_dir
-
-
-# ---------------------------------------------------------------------------
-# Merge helpers
-# ---------------------------------------------------------------------------
-
-
-def _infer_row_count(data: Dict[str, object], source_path: Path) -> int:
-    list_lengths = [len(value) for value in data.values() if isinstance(value, list)]
-    if not list_lengths:
-        raise ValueError(f"{source_path} does not contain any column arrays.")
-    return max(list_lengths)
-
-
-def _normalize_driver_columns(
-    data: Dict[str, object],
-    row_count: int,
-    driver_label: str,
-) -> Dict[str, List[object]]:
-    normalized: Dict[str, List[object]] = {}
-
-    for key, value in data.items():
-        if not isinstance(value, list):
-            logger.warning(
-                "Ignoring non-list key '%s' for driver %s while merging session data",
-                key,
-                driver_label,
-            )
-            continue
-
-        values = list(value)
-        if len(values) < row_count:
-            logger.warning(
-                "Padding key '%s' for driver %s from %d to %d rows",
-                key,
-                driver_label,
-                len(values),
-                row_count,
-            )
-            values.extend(["None"] * (row_count - len(values)))
-        elif len(values) > row_count:
-            logger.warning(
-                "Truncating key '%s' for driver %s from %d to %d rows",
-                key,
-                driver_label,
-                len(values),
-                row_count,
-            )
-            values = values[:row_count]
-
-        normalized[key] = values
-
-    return normalized
-
-
-def _merge_driver_payloads(
-    payloads: List[Tuple[str, int, Dict[str, List[object]]]]
-) -> Dict[str, List[object]]:
-    ordered_keys: List[str] = []
-    for _, _, payload in payloads:
-        for key in payload.keys():
-            if key not in ordered_keys:
-                ordered_keys.append(key)
-
-    merged = {key: [] for key in ordered_keys}
-
-    for driver_label, row_count, payload in payloads:
-        for key in ordered_keys:
-            values = payload.get(key)
-            if values is None:
-                logger.warning(
-                    "Missing key '%s' for driver %s, padding %d rows with 'None'",
-                    key,
-                    driver_label,
-                    row_count,
-                )
-                merged[key].extend(["None"] * row_count)
-                continue
-            merged[key].extend(values)
-
-    return merged
+    return drivers  # already sorted because we sorted entries above
 
 
 # ---------------------------------------------------------------------------
-# Merger
+# Core merge logic
 # ---------------------------------------------------------------------------
 
 
-class SessionLapTimesMerger:
-    """Merge existing driver-level laptimes into session-level files."""
+def merge_session(event_name: str, session_name: str) -> bool:
+    """
+    Merge all driver laptimes.json files for one session into
+    session_laptimes.json.
 
-    def __init__(self, year: int = DEFAULT_YEAR, root_dir: Path | None = None):
-        self.year = year
-        self.root_dir = _resolve_season_root(year, root_dir)
+    Returns True on success, False on failure (after logging the error).
+    Raises SystemExit on unrecoverable errors (missing drivers, bad files).
+    """
+    label = f"{event_name} - {session_name}"
+    session_dir = os.path.join(event_name, session_name)
 
-    def process_event_session(self, event_name: str, session_name: str) -> None:
-        label = f"{event_name} - {session_name}"
-        session_dir = self.root_dir / event_name / session_name
+    if not os.path.isdir(session_dir):
+        logger.error("Session directory not found: %s", session_dir)
+        return False
 
-        if not session_dir.is_dir():
-            logger.warning("Session directory not found for %s at %s", label, session_dir)
-            return
+    drivers = _discover_drivers(session_dir)
+    if not drivers:
+        logger.error("No driver directories with laptimes.json found in %s", session_dir)
+        return False
 
-        driver_dirs = sorted(path for path in session_dir.iterdir() if path.is_dir())
-        if not driver_dirs:
-            logger.warning("No driver directories found for %s", label)
-            return
+    logger.info(
+        "%s: found %d driver(s): %s", label, len(drivers), ", ".join(drivers)
+    )
 
-        payloads: List[Tuple[str, int, Dict[str, List[object]]]] = []
-        missing_drivers: List[str] = []
-
-        for driver_dir in driver_dirs:
-            driver = driver_dir.name
-            laptimes_path = driver_dir / "laptimes.json"
-
-            if not laptimes_path.is_file():
-                logger.warning("Missing laptimes.json for %s in %s", driver, label)
-                missing_drivers.append(driver)
-                continue
-
-            try:
-                raw_data = _load_json(laptimes_path)
-                row_count = _infer_row_count(raw_data, laptimes_path)
-                payloads.append(
-                    (
-                        driver,
-                        row_count,
-                        _normalize_driver_columns(raw_data, row_count, driver),
-                    )
-                )
-            except Exception as exc:
-                logger.error("Skipping %s in %s: %s", driver, label, exc)
-
-        if missing_drivers:
-            logger.info(
-                "Skipped %d missing driver file(s) for %s: %s",
-                len(missing_drivers),
+    # ------------------------------------------------------------------
+    # Load every driver's file — fail the whole session on any problem.
+    # ------------------------------------------------------------------
+    driver_data: Dict[str, Dict[str, List]] = {}
+    for driver in drivers:
+        path = os.path.join(session_dir, driver, "laptimes.json")
+        try:
+            data = _read_json(path)
+        except FileNotFoundError:
+            logger.error("Missing laptimes.json for driver %s in %s", driver, label)
+            return False
+        except Exception as exc:
+            logger.error(
+                "Failed to read laptimes.json for driver %s in %s: %s",
+                driver,
                 label,
-                ", ".join(missing_drivers),
+                exc,
             )
+            return False
 
-        if not payloads:
-            logger.warning("No valid driver laptimes found for %s", label)
-            return
+        if not isinstance(data, dict):
+            logger.error(
+                "laptimes.json for driver %s in %s is not a JSON object", driver, label
+            )
+            return False
 
-        merged = _merge_driver_payloads(payloads)
-        output_path = session_dir / "session_laptimes.json"
-        _write_json(output_path, merged)
+        lap_count = _driver_lap_count(data)
+        if lap_count == 0:
+            logger.error(
+                "laptimes.json for driver %s in %s contains no lap rows", driver, label
+            )
+            return False
 
-        total_rows = sum(row_count for _, row_count, _ in payloads)
-        logger.info(
-            "Wrote %s with %d merged rows from %d driver file(s)",
-            output_path,
-            total_rows,
-            len(payloads),
+        driver_data[driver] = data
+        logger.info("  Loaded %s: %d lap(s)", driver, lap_count)
+
+    # ------------------------------------------------------------------
+    # Build the union of all keys across every driver.
+    # ------------------------------------------------------------------
+    all_keys: List[str] = []
+    seen: set = set()
+    # Preserve a stable key order: use the first driver's key order as the
+    # base, then append any extra keys seen in subsequent drivers.
+    for driver in drivers:
+        for key in driver_data[driver]:
+            if key not in seen:
+                all_keys.append(key)
+                seen.add(key)
+
+    # ------------------------------------------------------------------
+    # Concatenate arrays in alphabetical driver order.
+    # Keys missing for a driver are filled with "None" * that driver's lap count.
+    # ------------------------------------------------------------------
+    merged: Dict[str, List] = {key: [] for key in all_keys}
+
+    for driver in drivers:
+        data = driver_data[driver]
+        lap_count = _driver_lap_count(data)
+        for key in all_keys:
+            if key in data:
+                values = data[key]
+                if not isinstance(values, list):
+                    logger.error(
+                        "Key '%s' for driver %s in %s is not an array",
+                        key,
+                        driver,
+                        label,
+                    )
+                    return False
+                merged[key].extend(values)
+            else:
+                # Key present in another driver's file but not this one.
+                logger.warning(
+                    "Key '%s' missing for driver %s in %s — filling with %d None(s)",
+                    key,
+                    driver,
+                    label,
+                    lap_count,
+                )
+                merged[key].extend(["None"] * lap_count)
+
+    # ------------------------------------------------------------------
+    # Sanity-check: every key must have the same total length.
+    # ------------------------------------------------------------------
+    lengths = {key: len(arr) for key, arr in merged.items()}
+    unique_lengths = set(lengths.values())
+    if len(unique_lengths) > 1:
+        bad = {k: v for k, v in lengths.items() if v != max(unique_lengths)}
+        logger.error(
+            "Array length mismatch after merge in %s. Mismatched keys: %s",
+            label,
+            bad,
         )
+        return False
 
-    def process_all(self) -> None:
-        logger.info("Starting session laptimes merge for %d", self.year)
+    # ------------------------------------------------------------------
+    # Write output.
+    # ------------------------------------------------------------------
+    out_path = os.path.join(session_dir, "session_laptimes.json")
+    try:
+        _write_json(out_path, merged)
+    except Exception as exc:
+        logger.error("Failed to write %s: %s", out_path, exc)
+        return False
 
-        sessions = [session for session in TARGET_SESSIONS if session.strip()]
-        if not sessions:
-            logger.warning("No TARGET_SESSIONS configured — nothing to merge.")
-            return
-
-        for event_name in TARGET_EVENT_NAMES:
-            logger.info("Processing %s (%s)", event_name, ", ".join(sessions))
-            for session_name in sessions:
-                try:
-                    self.process_event_session(event_name, session_name)
-                except Exception as exc:
-                    logger.error("Failed %s %s: %s", event_name, session_name, exc)
+    total_laps = max(lengths.values()) if lengths else 0
+    logger.info(
+        "%s: wrote %s (%d drivers, %d total laps)",
+        label,
+        out_path,
+        len(drivers),
+        total_laps,
+    )
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -320,8 +295,22 @@ class SessionLapTimesMerger:
 
 
 def main() -> None:
-    merger = SessionLapTimesMerger(year=DEFAULT_YEAR)
-    merger.process_all()
+    overall_success = True
+
+    for event_name in TARGET_EVENT_NAMES:
+        for session_name in TARGET_SESSIONS:
+            label = f"{event_name} - {session_name}"
+            logger.info("=== Merging %s ===", label)
+            success = merge_session(event_name, session_name)
+            if not success:
+                logger.error("Merge FAILED for %s", label)
+                overall_success = False
+
+    if not overall_success:
+        logger.error("One or more sessions failed to merge.")
+        sys.exit(1)
+
+    logger.info("All sessions merged successfully.")
 
 
 if __name__ == "__main__":
