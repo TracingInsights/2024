@@ -21,9 +21,9 @@ jobs:
             cache/1.txt
             cache_preseason/1.txt
             requirements.txt
-            SessionLapTimes.py            
+            SessionLapTimes.py
             utils.py
-          sparse-checkout-cone-mode: false    
+          sparse-checkout-cone-mode: false
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -33,7 +33,7 @@ jobs:
         uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-          
+
 
       - name: Install dependencies with uv
         run: |
@@ -53,16 +53,16 @@ jobs:
         run: |
           # Temporarily disable sparse-checkout advice and add files with --sparse flag
           git config advice.updateSparsePath false
-          
+
           # Find all JSON files created/modified by the script
           # Add them with --sparse flag to allow adding outside sparse-checkout
           find . -type f -name "*.json" -not -path "./.git/*" -exec git add --force --sparse {} +
-          
+
           # Also add the log file if it exists
           if [ -f "laptimes_extraction.log" ]; then
             git add --force --sparse laptimes_extraction.log
           fi
-          
+
           # Check if there are staged changes
           if ! git diff --cached --quiet; then
               git commit -m "Update F1 telemetry data [skip ci]"
