@@ -233,7 +233,7 @@ class SessionLapTimesMerger:
 
     def __init__(self, year: int = DEFAULT_YEAR, root_dir: Path | None = None):
         self.year = year
-        self.root_dir = _resolve_season_root(year, root_dir)
+        self.root_dir = root_dir
 
     def process_event_session(self, event_name: str, session_name: str) -> None:
         label = f"{event_name} - {session_name}"
