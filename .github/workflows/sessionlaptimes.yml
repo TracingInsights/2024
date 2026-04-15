@@ -13,8 +13,14 @@ jobs:
   extract-telemetry:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository
+      - name: Checkout repository (sparse)
         uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            **/laptimes.json
+            *.py
+            requirements.txt
+          sparse-checkout-cone-mode: false
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
