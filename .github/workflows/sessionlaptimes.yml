@@ -49,7 +49,7 @@ jobs:
       - name: Commit and push changes
         run: |
           # Find all JSON files created/modified by the script
-          find . -type f -name "*.json" -not -path "./.git/*" -exec git add --force {} +
+          find . -type f -name "session_laptimes.json" -not -path "./.git/*" -exec git add --sparse --force {} +
 
           # Also add the log file if it exists
           if [ -f "laptimes_extraction.log" ]; then
