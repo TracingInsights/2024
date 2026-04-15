@@ -122,6 +122,26 @@ def _write_json(path: Path, obj: Dict[str, List[object]]) -> None:
         json.dump(obj, file_obj, ensure_ascii=False)
 
 
+def _resolve_season_root(year: int, root_dir: Path | None) -> Path:
+    """
+    Resolve the directory that contains season event folders.
+
+    This supports both common layouts:
+    - {cwd}/{event_name}/{session_name}
+    - {cwd}/{year}/{event_name}/{session_name}
+    """
+    base_dir = (root_dir or Path.cwd()).resolve()
+    if base_dir.name == str(year):
+        return base_dir
+
+    nested_year_dir = base_dir / str(year)
+    if nested_year_dir.is_dir():
+        logger.info("Using nested season directory: %s", nested_year_dir)
+        return nested_year_dir
+
+    return base_dir
+
+
 # ---------------------------------------------------------------------------
 # Merge helpers
 # ---------------------------------------------------------------------------
@@ -213,7 +233,7 @@ class SessionLapTimesMerger:
 
     def __init__(self, year: int = DEFAULT_YEAR, root_dir: Path | None = None):
         self.year = year
-        self.root_dir = root_dir or Path.cwd()
+        self.root_dir = _resolve_season_root(year, root_dir)
 
     def process_event_session(self, event_name: str, session_name: str) -> None:
         label = f"{event_name} - {session_name}"
