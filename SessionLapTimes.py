@@ -28,6 +28,11 @@ import orjson
 
 DEFAULT_YEAR = 2024
 
+# Root directory where event folders live.
+# "." means the directory you invoke the script from.
+# Override this if your data lives elsewhere, e.g. BASE_DIR = "/data/f1/2024"
+BASE_DIR = "."
+
 TARGET_EVENT_NAMES_LIST = [
     # "Bahrain Grand Prix",
     # "Saudi Arabian Grand Prix",
@@ -45,14 +50,14 @@ TARGET_EVENT_NAMES_LIST = [
     # "Belgian Grand Prix",
     # "Dutch Grand Prix",
     # "Italian Grand Prix",
-    # "Azerbaijan Grand Prix",
-    # "Singapore Grand Prix",
-    # "United States Grand Prix",
-    # "Mexico City Grand Prix",
+    "Azerbaijan Grand Prix",
+    "Singapore Grand Prix",
+    "United States Grand Prix",
+    "Mexico City Grand Prix",
     # "São Paulo Grand Prix",
     # "Las Vegas Grand Prix",
     # "Qatar Grand Prix",
-    "Abu Dhabi Grand Prix",
+    # "Abu Dhabi Grand Prix",
 ]
 TARGET_EVENT_NAMES = [e.strip() for e in TARGET_EVENT_NAMES_LIST if e.strip()]
 if not TARGET_EVENT_NAMES:
@@ -69,13 +74,13 @@ AVAILABLE_SESSIONS = [
 ]
 
 TARGET_SESSIONS = [
-    # "Practice 1",
-    # "Practice 2",
-    # "Practice 3",
-    # "Qualifying",
-    # "Sprint Qualifying",
-    # "Sprint",
-    "Race",
+    "Practice 1",
+    "Practice 2",
+    "Practice 3",
+    "Qualifying",
+    "Sprint Qualifying",
+    "Sprint",
+    # "Race",
 ]
 
 invalid_target_sessions = sorted(set(TARGET_SESSIONS) - set(AVAILABLE_SESSIONS))
@@ -158,16 +163,18 @@ def merge_session(event_name: str, session_name: str) -> bool:
     Raises SystemExit on unrecoverable errors (missing drivers, bad files).
     """
     label = f"{event_name} - {session_name}"
-    session_dir = os.path.join(event_name, session_name)
+    session_dir = os.path.join(BASE_DIR, event_name, session_name)
 
     if not os.path.isdir(session_dir):
-        logger.error("Session directory not found: %s", session_dir)
-        return False
+        logger.warning("Session directory not found, skipping: %s", session_dir)
+        return True
 
     drivers = _discover_drivers(session_dir)
     if not drivers:
-        logger.error("No driver directories with laptimes.json found in %s", session_dir)
-        return False
+        logger.warning(
+            "No driver directories with laptimes.json found in %s — skipping", session_dir
+        )
+        return True
 
     logger.info(
         "%s: found %d driver(s): %s", label, len(drivers), ", ".join(drivers)
