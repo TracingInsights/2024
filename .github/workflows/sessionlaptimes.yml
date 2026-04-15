@@ -13,17 +13,8 @@ jobs:
   extract-telemetry:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout repository (scripts only)
+      - name: Checkout repository
         uses: actions/checkout@v6
-        with:
-          fetch-depth: 1
-          sparse-checkout: |
-            cache/1.txt
-            cache_preseason/1.txt
-            requirements.txt
-            SessionLapTimes.py
-            utils.py
-          sparse-checkout-cone-mode: false
       - name: Set up Python
         uses: actions/setup-python@v6
         with:
@@ -51,16 +42,12 @@ jobs:
 
       - name: Commit and push changes
         run: |
-          # Temporarily disable sparse-checkout advice and add files with --sparse flag
-          git config advice.updateSparsePath false
-
           # Find all JSON files created/modified by the script
-          # Add them with --sparse flag to allow adding outside sparse-checkout
-          find . -type f -name "*.json" -not -path "./.git/*" -exec git add --force --sparse {} +
+          find . -type f -name "*.json" -not -path "./.git/*" -exec git add --force {} +
 
           # Also add the log file if it exists
           if [ -f "laptimes_extraction.log" ]; then
-            git add --force --sparse laptimes_extraction.log
+            git add --force laptimes_extraction.log
           fi
 
           # Check if there are staged changes
