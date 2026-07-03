@@ -64,13 +64,13 @@ if len(TARGET_EVENT_NAMES_LIST) != 1:
     )
 TARGET_EVENT_NAME = TARGET_EVENT_NAMES_LIST[0]
 AVAILABLE_SESSIONS = [
-    "Practice 1",
-    "Practice 2",
-    "Practice 3",
+    # "Practice 1",
+    # "Practice 2",
+    # "Practice 3",
     "Qualifying",
-    "Sprint Qualifying",
-    "Sprint",
-    "Race",
+    # "Sprint Qualifying",
+    # "Sprint",
+    # "Race",
 ]
 # Select one or more sessions from AVAILABLE_SESSIONS.
 TARGET_SESSIONS = [
